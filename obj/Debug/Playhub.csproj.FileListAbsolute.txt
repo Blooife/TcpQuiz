@@ -1,0 +1,17 @@
+C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Playhub.exe.config
+C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Playhub.exe
+C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Playhub.pdb
+C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Newtonsoft.Json.xml
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.csproj.AssemblyReference.cache
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.csproj.SuggestedBindingRedirects.cache
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.Form1.resources
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.Form2.resources
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.Properties.Resources.resources
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.csproj.GenerateResource.cache
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.csproj.CoreCompileInputs.cache
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.csproj.CopyComplete
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.exe
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.pdb
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.EnterAnswer.resources
+C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.CheckAnswer.resources
