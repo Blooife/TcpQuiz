@@ -30,9 +30,10 @@
         {
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.rbWithout = new System.Windows.Forms.RadioButton();
+            this.rbWith = new System.Windows.Forms.RadioButton();
             this.btnCreateGame = new System.Windows.Forms.Button();
-            this.label18 = new System.Windows.Forms.Label();
-            this.tWinPoint = new System.Windows.Forms.TextBox();
             this.label = new System.Windows.Forms.Label();
             this.tNumOfPl = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
@@ -55,6 +56,7 @@
             this.label13 = new System.Windows.Forms.Label();
             this.lgamerName = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -70,9 +72,8 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.groupBox3);
             this.groupBox1.Controls.Add(this.btnCreateGame);
-            this.groupBox1.Controls.Add(this.label18);
-            this.groupBox1.Controls.Add(this.tWinPoint);
             this.groupBox1.Controls.Add(this.label);
             this.groupBox1.Controls.Add(this.tNumOfPl);
             this.groupBox1.Controls.Add(this.label8);
@@ -92,6 +93,39 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Create A Game";
             // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.rbWithout);
+            this.groupBox3.Controls.Add(this.rbWith);
+            this.groupBox3.Location = new System.Drawing.Point(98, 186);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(200, 41);
+            this.groupBox3.TabIndex = 26;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Host Mode";
+            // 
+            // rbWithout
+            // 
+            this.rbWithout.Location = new System.Drawing.Point(74, 17);
+            this.rbWithout.Name = "rbWithout";
+            this.rbWithout.Size = new System.Drawing.Size(104, 24);
+            this.rbWithout.TabIndex = 1;
+            this.rbWithout.TabStop = true;
+            this.rbWithout.Text = "without";
+            this.rbWithout.UseVisualStyleBackColor = true;
+            this.rbWithout.CheckedChanged += new System.EventHandler(this.rbWithout_CheckedChanged);
+            // 
+            // rbWith
+            // 
+            this.rbWith.Location = new System.Drawing.Point(6, 18);
+            this.rbWith.Name = "rbWith";
+            this.rbWith.Size = new System.Drawing.Size(104, 24);
+            this.rbWith.TabIndex = 0;
+            this.rbWith.TabStop = true;
+            this.rbWith.Text = "with";
+            this.rbWith.UseVisualStyleBackColor = true;
+            this.rbWith.CheckedChanged += new System.EventHandler(this.rbWith_CheckedChanged);
+            // 
             // btnCreateGame
             // 
             this.btnCreateGame.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(162)));
@@ -103,29 +137,10 @@
             this.btnCreateGame.UseVisualStyleBackColor = true;
             this.btnCreateGame.Click += new System.EventHandler(this.btnCreateGame_Click);
             // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(30, 191);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(53, 13);
-            this.label18.TabIndex = 33;
-            this.label18.Text = "Win Point";
-            // 
-            // tWinPoint
-            // 
-            this.tWinPoint.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(162)));
-            this.tWinPoint.Location = new System.Drawing.Point(9, 207);
-            this.tWinPoint.Name = "tWinPoint";
-            this.tWinPoint.Size = new System.Drawing.Size(107, 20);
-            this.tWinPoint.TabIndex = 32;
-            this.tWinPoint.Text = "100";
-            this.tWinPoint.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
             // label
             // 
             this.label.AutoSize = true;
-            this.label.Location = new System.Drawing.Point(121, 191);
+            this.label.Location = new System.Drawing.Point(0, 191);
             this.label.Name = "label";
             this.label.Size = new System.Drawing.Size(92, 13);
             this.label.TabIndex = 25;
@@ -134,7 +149,7 @@
             // tNumOfPl
             // 
             this.tNumOfPl.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(162)));
-            this.tNumOfPl.Location = new System.Drawing.Point(127, 207);
+            this.tNumOfPl.Location = new System.Drawing.Point(6, 207);
             this.tNumOfPl.Name = "tNumOfPl";
             this.tNumOfPl.Size = new System.Drawing.Size(68, 20);
             this.tNumOfPl.TabIndex = 24;
@@ -346,11 +361,17 @@
             this.Text = "Welcome";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
         }
+
+        private System.Windows.Forms.RadioButton rbWith;
+        private System.Windows.Forms.RadioButton rbWithout;
+
+        private System.Windows.Forms.GroupBox groupBox3;
 
         #endregion
 
@@ -376,8 +397,6 @@
         private System.Windows.Forms.TextBox lgamePort;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.TextBox lgamerName;
-        private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.TextBox tWinPoint;
         private System.Windows.Forms.Label label;
         private System.Windows.Forms.TextBox tNumOfPl;
     }

@@ -26,14 +26,6 @@ namespace Playhub
         }
     }
     
-    /*public class AnswerReceivedEvent : EventArgs
-    {
-        public ProtocolModel.GameSetting GameSettings { get; set; }
-        public AnswerReceivedEvent(string data)
-        {
-            GameSettings = JsonConvert.DeserializeObject<ProtocolModel.GameSetting>(data); ;
-        }
-    }*/
     public class GameSettingsReceivedEvent : EventArgs
     {
         public ProtocolModel.GameSetting GameSettings { get; set; }

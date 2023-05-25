@@ -21,7 +21,7 @@ namespace Playhub
         public static string GameAdrress { get; set; }
         public static int GamePort { get; set; }
         public static string GameName { get; set; }
-        public static int GameWinPoint { get; set; }
+        //public static int GameWinPoint { get; set; }
 
         public static int NumOfPlayers { get; set; }
 
@@ -30,6 +30,7 @@ namespace Playhub
         public static System.Timers.Timer GameTimer;
         public static Stopwatch watch;
         public static bool ReceiveAnswer = false;
+        public static bool Host;
 
         private static ProtocolModel.Question CurrentQuestion { get; set; }
 
@@ -62,7 +63,6 @@ namespace Playhub
 
             GameSocket = new TcpListener(IPAddress.Parse(GameAdrress), GamePort);
             GameSocket.Start();
-
         }
 
         public static async void CreateClient()
@@ -163,26 +163,37 @@ namespace Playhub
                                     {
                                         GameRunning = true;
                                         RequestSendMessage($"--> Game started by host");
+                                        SendCanChooseFalse();
+                                        if (Host)
+                                        {
+                                            SendCanChooseTrue(Clients[1]);
+                                        }
+                                        else
+                                        {
+                                            SendCanChooseTrue(Clients[0]);
+                                        }
                                         break;
                                     }
                                     case ProtocolModel.MessageType.RequestKnowAnswer:
                                     {
-                                        BroadcastFromServer(JsonConvert.SerializeObject(new ProtocolModel.Base
-                                        {
-                                            Type = ProtocolModel.MessageType.CanAnswer,
-                                            Data = "False"
-                                        }));
-                                        if (ReceiveAnswer)
-                                        {
-                                            BroadcastFromServerToOne(JsonConvert.SerializeObject(new ProtocolModel.Base
+                                            BroadcastFromServer(JsonConvert.SerializeObject(new ProtocolModel.Base
                                             {
                                                 Type = ProtocolModel.MessageType.CanAnswer,
-                                                Data = "True"
-                                            }), connectionClient);
-                                        }
-                                        ReceiveAnswer = false;
-                                        GameTimer.Stop();
-                                        watch.Stop();
+                                                Data = "False"
+                                            }));
+                                            if (ReceiveAnswer)
+                                            {
+                                                BroadcastFromServerToOne(JsonConvert.SerializeObject(new ProtocolModel.Base
+                                                {
+                                                    Type = ProtocolModel.MessageType.CanAnswer,
+                                                    Data = "True"
+                                                }), connectionClient);
+                                                SendTimerState(false);
+                                                GameTimer.Stop();
+                                                watch.Stop();
+                                            }
+                                            ReceiveAnswer = false; 
+                                        
                                         break;
                                     }
                                     case ProtocolModel.MessageType.SendAnswer:
@@ -190,45 +201,30 @@ namespace Playhub
                                         var m = JsonConvert.DeserializeObject<ProtocolModel.Answer>(
                                             baseMessage.Data.ToString());
                                         m.PlayerId = connectionClient.Id;
-                                        BroadcastFromServerToOne(JsonConvert.SerializeObject(new ProtocolModel.Base
+                                        if (Host)
                                         {
-                                            Type = ProtocolModel.MessageType.SendHostCheckAnswer,
-                                            Data = new ProtocolModel.Answer()
+                                            BroadcastFromServerToOne(JsonConvert.SerializeObject(new ProtocolModel.Base
                                             {
-                                               answer = m.answer,
-                                               PlayerId = m.PlayerId
-                                            }
-                                        }), Clients[0]);
+                                                Type = ProtocolModel.MessageType.SendHostCheckAnswer,
+                                                Data = new ProtocolModel.Answer()
+                                                {
+                                                    answer = m.answer,
+                                                    PlayerId = m.PlayerId
+                                                }
+                                            }), Clients[0]); 
+                                        }
+                                        else
+                                        {
+                                            CheckAnswer(m);
+                                        }
                                         break;
                                     }
                                     case ProtocolModel.MessageType.ResponseHostCheck:
                                     {
                                         var m = JsonConvert.DeserializeObject<ProtocolModel.Answer>(
                                             baseMessage.Data.ToString());
-                                        if (HandleReceivedAnswer(m)) 
-                                        {
-                                            SendCanAnswer(false);
-                                            ShowAnswer();
-                                        }
-                                        else
-                                        {
-                                            int remainingtime = 7000 - (int)watch.ElapsedMilliseconds;
-                                            if (remainingtime > 0)
-                                            {
-                                                GameTimer.Interval = remainingtime;
-                                                GameTimer.Start();
-                                                watch.Start();
-                                                SendCanAnswer(true);
-                                            }
-                                            else
-                                            {
-                                                GameTimer.Stop();
-                                                GameTimer.Interval = 7000;
-                                                watch.Stop();
-                                                SendCanAnswer(false);
-                                                ShowAnswer();
-                                            } 
-                                        }
+                                        CheckAnswer(m);
+                                        
                                         break;
                                     }
                                     case ProtocolModel.MessageType.ShowQuestion:
@@ -236,6 +232,7 @@ namespace Playhub
                                         int m = Int16.Parse(JsonConvert.DeserializeObject<string>(
                                             baseMessage.Data.ToString()));
                                         RequestNewQuestion(m);
+                                        watch.Reset();
                                         GameTimer.Start();
                                         watch.Start();
                                         BroadcastFromServer(JsonConvert.SerializeObject(new ProtocolModel.Base
@@ -243,6 +240,7 @@ namespace Playhub
                                             Type = ProtocolModel.MessageType.RemoveButton,
                                             Data = m.ToString()
                                                 }));
+                                        
                                         break;
                                     }
                                     // Game Settings
@@ -278,6 +276,15 @@ namespace Playhub
 
         }
 
+        public static void SendTimerState(bool st)
+        {
+            BroadcastFromServer(JsonConvert.SerializeObject(new ProtocolModel.Base
+            {
+                Type = ProtocolModel.MessageType.SendTimerState,
+                Data = st.ToString()
+            }));
+        }
+
         public static void ResponseHostCheck(ProtocolModel.Answer ans)
         {
             string json = JsonConvert.SerializeObject(new ProtocolModel.Base
@@ -293,19 +300,66 @@ namespace Playhub
             });
             SendFromClient(json);
         }
+
+        public static void CheckAnswer(ProtocolModel.Answer answer)
+        {
+            if (HandleReceivedAnswer(answer)) 
+            {
+                SendCanAnswer(false);
+                ShowAnswer();
+                SendCanChooseFalse();
+                SendCanChooseTrue(Clients.First(i=>i.Id==answer.PlayerId));
+            }
+            else
+            {
+                int remainingtime = 7000 - (int)watch.ElapsedMilliseconds;
+                if (remainingtime > 0)
+                {
+                    GameTimer.Interval = remainingtime;
+                    SendTimerState(true);
+                    SendCanAnswer(true);
+                    GameTimer.Start();
+                    watch.Start();
+                }
+                else
+                {
+                    GameTimer.Stop();
+                    GameTimer.Interval = 7000;
+                    watch.Stop();
+                    SendTimerState(false);
+                    SendCanAnswer(false);
+                    ShowAnswer();
+                } 
+            }
+        }
         
         public static bool HandleReceivedAnswer(ProtocolModel.Answer answer)
         {
             var pl = Players.First(i => i.Id == answer.PlayerId);
-            if (answer.IsRight)
+            if (Host)
             {
-                pl.Point += CurrentQuestion.Points;
-                RequestSendMessage($"{pl.Name}'s gets {CurrentQuestion.Points} points for right answer");
-                BroadcastPlayers();
-                return true;
+                if (answer.IsRight)
+                {
+                    pl.Point += CurrentQuestion.Points;
+                    RequestSendMessage(
+                        $"{pl.Name}'s gets {CurrentQuestion.Points} points for right answer {answer.answer}");
+                    BroadcastPlayers();
+                    return true;
+                }
+            }
+            else
+            {
+                if (answer.answer == CurrentQuestion.Answer)
+                {
+                    pl.Point += CurrentQuestion.Points;
+                    RequestSendMessage(
+                        $"{pl.Name}'s gets {CurrentQuestion.Points} points for right answer {answer.answer}");
+                    BroadcastPlayers();
+                    return true;
+                } 
             }
             pl.Point -= CurrentQuestion.Points;
-            RequestSendMessage($"{pl.Name}'s loses {CurrentQuestion.Points} points for wrong answer");
+            RequestSendMessage($"{pl.Name}'s loses {CurrentQuestion.Points} points for wrong answer {answer.answer}");
             BroadcastPlayers();
             return false;
         }
@@ -446,13 +500,33 @@ namespace Playhub
             }));
             
         }
+        
+        public static void SendCanChooseFalse()
+        {
+            BroadcastFromServer(JsonConvert.SerializeObject(new ProtocolModel.Base
+            {
+                Type = ProtocolModel.MessageType.CanChoose,
+                Data = "False"
+            }));
+        }
+        
+        public static void SendCanChooseTrue(ProtocolModel.ConnectionClient cc)
+        {
+            BroadcastFromServerToOne(JsonConvert.SerializeObject(new ProtocolModel.Base
+            {
+                Type = ProtocolModel.MessageType.CanChoose,
+                Data = "True"
+            }), cc);
+        }
+        
+        
         public static void BroadcastWinner()
         {
-            var players = Players.OrderBy(pl => pl.Point);
             Players = new ObservableCollection<ProtocolModel.Player>(Players.OrderByDescending(i => i.Point));
             RequestSendMessage($"{Players.First().Name} ({Players.First().Point}) is Won");
-            RequestSendMessage($"Game Finished");
-            GameRunning = false;
+            RequestSendMessage($"Game Finished"); 
+            GameRunning = false; 
+            
         }
 
         //Request

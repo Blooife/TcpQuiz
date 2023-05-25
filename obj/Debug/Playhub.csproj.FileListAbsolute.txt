@@ -15,3 +15,5 @@ C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.exe
 C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.pdb
 C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.EnterAnswer.resources
 C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.CheckAnswer.resources
+C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\ProgressBar.dll
+C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\ProgressBar.xml

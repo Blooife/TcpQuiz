@@ -60,6 +60,8 @@ namespace Playhub
             this.ClientSize = new System.Drawing.Size(264, 187);
             this.Controls.Add(this.bOk);
             this.Controls.Add(this.tAnswer);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "EnterAnswer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "EnterAnswer";

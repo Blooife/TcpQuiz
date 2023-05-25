@@ -9,6 +9,8 @@ namespace Playhub
     public static class PlayerSetting
     {
         public static bool IsHost { get; set; }
+        
+        public static bool IsPlayer { get; set; }
         public static string Username { get; set; }
     }
 }

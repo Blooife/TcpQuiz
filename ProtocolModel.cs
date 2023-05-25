@@ -44,6 +44,9 @@ namespace Playhub
             public string Player { get; set; }
             public string Message { get; set; }
         }
+        
+        
+        
         public class Player
         {
             public string Id { get; set; }
@@ -61,6 +64,7 @@ namespace Playhub
             public int[] Points { get; set; }
             public  int[] Index { get; set; }
             public string GameName { get; set; }
+            public bool IsRunning { get; set; }
         }
         public class Btn:Button
         {
@@ -79,10 +83,11 @@ namespace Playhub
             ShowAnswer,
             RemoveButton,
             CanAnswer,
+            CanChoose,
+            SendTimerState,
             SendHostCheckAnswer,
             ResponseHostCheck,
-            //QuestionDelivered,
-            RequestGameSettings
+            RequestGameSettings,
         }
     }
 }

@@ -82,6 +82,8 @@ namespace Playhub
             this.Controls.Add(this.lText);
             this.Controls.Add(this.bNo);
             this.Controls.Add(this.bYes);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "CheckAnswer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "CheckAnswer";

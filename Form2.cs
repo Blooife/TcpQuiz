@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using System.Windows.Forms;
-using Timer = System.Windows.Forms.Timer;
 
 namespace Playhub
 {
     public partial class Form2 : Form
     {
         public TableLayoutPanel panel = new TableLayoutPanel();
+        public static TimerThreadExample example = new TimerThreadExample();
+        Thread timerThread = new Thread(new ThreadStart(example.Start));
+        public bool BlockCanAnswer = false;
+
         public Form2()
         {
             InitializeComponent();
@@ -23,20 +22,46 @@ namespace Playhub
             ProtocolProcess.Questions.CollectionChanged += QuestionsOnCollectionChanged;
             ProtocolProcess.Buttons.CollectionChanged += ButtonsCollectionChanged;
             ProtocolProcess.OnShowAnswer += ShowAnswer;
+            ProtocolProcess.OnCanChoose += CanChoose;
+            ProtocolProcess.OnTimerState += ProcessTimerState;
             ProtocolProcess.OnHostCheckAnswer += CheckAnswer;
-            
+            prBar.Maximum = 6000;
+            prBar.Minimum = 0; 
+            prBar.Value = 0;
             
             if (PlayerSetting.IsHost)
             {
                 bStart.Visible = true;
-                bAnswer.Visible = false;
+                bAnswer.Visible = PlayerSetting.IsPlayer;
+            }
+        }
+
+        private void CanChoose(object sender, EventArgs e)
+        {
+            bool canChoose = (bool)sender;
+            foreach (var btn in ProtocolProcess.Buttons)
+            {
+                btn.Invoke((MethodInvoker)(() => btn.Enabled = canChoose));
+            }
+        }
+
+        public void ProcessTimerState(object sender, EventArgs e)
+        {
+            bool b = (bool)sender;
+            if (b)
+            {
+                example.timer.Start();
+            }
+            else
+            {
+                example.timer.Stop();
             }
         }
 
         public void CheckAnswer(object sender, AnswerReceivedEvent e)
         {
             ProtocolModel.Answer a = e.ans;
-            CheckAnswer chA = new CheckAnswer($"Player's answer /{a.answer}/ \n Right answer /{ProtocolProcess.Questions.Last().Answer}/ \n Is player right?");
+            CheckAnswer chA = new CheckAnswer($"Player's answer {a.answer} \n Right answer {ProtocolProcess.Questions.Last().Answer} \n Is player right?");
             
             if (chA.ShowDialog() == DialogResult.Yes)
             {
@@ -58,23 +83,34 @@ namespace Playhub
         }
         private void ShowAnswer(object sender, EventArgs e)
         {
+            BlockCanAnswer = true;
+            prBar.Invoke((MethodInvoker)(()=> prBar.Visible = false));
             var q = ProtocolProcess.Questions.Last();
             tQuestion.Invoke((MethodInvoker)(() => tQuestion.Text = $"{q.Answer}" + Environment.NewLine));
             Thread.Sleep(3000);
-            //tQuestion.Visible = false;
             tQuestion.Invoke((MethodInvoker)(() => tQuestion.Visible = false));
+            BlockCanAnswer = false;
         }
+
+        
         private void QuestionsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            tQuestion.Invoke((MethodInvoker)(() => tQuestion.Visible = true));
-            var q = (ProtocolModel.Question)e.NewItems[0];
-            tQuestion.Invoke((MethodInvoker)(() => tQuestion.Text = $"{q.Text}" + Environment.NewLine));
+             Task.Run(() => {tQuestion.Invoke((MethodInvoker)(() => tQuestion.Visible = true));
+                var q = (ProtocolModel.Question)e.NewItems[0];
+                tQuestion.Invoke((MethodInvoker)(() => tQuestion.Text = $"{q.Text}" + Environment.NewLine)); });
+             
+             Task.Run(() =>
+             {
+                 prBar.Invoke((MethodInvoker)(() => prBar.Value = 0));
+                 prBar.Invoke((MethodInvoker)(() => prBar.Visible = true));
+             });
+             example.timer.Start();
+
         }
         private void MessagesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            tMessages.Invoke((MethodInvoker)(() => tMessages.Text += $"{ProtocolProcess.Messages[e.NewStartingIndex]}" + Environment.NewLine));
+            tMessages.Invoke((MethodInvoker)(() => tMessages.Text += $"{ProtocolProcess.Messages[e.NewStartingIndex]}" + Environment.NewLine)); 
         }
-
         private void PlayersOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             tPlayers.Invoke((MethodInvoker)(() => tPlayers.Text = ""));
@@ -90,6 +126,7 @@ namespace Playhub
         }
         private void Form2_Load(object sender, EventArgs e)
         {
+            prBar.Visible = false;
             label9.Text = PlayerSetting.Username;
             ProtocolProcess.RequestGameSettings();
             int[] p;
@@ -98,6 +135,7 @@ namespace Playhub
             {
                 if (ev.GameSettings != null)
                 {
+                    label3.Invoke((MethodInvoker)(()=>label3.Text = ev.GameSettings.GameName));
                     p = ev.GameSettings.Points;
                     ind = ev.GameSettings.Index;
                     for (int n=0; n<p.Length; n++)
@@ -105,6 +143,7 @@ namespace Playhub
                         var b = new ProtocolModel.Btn();
                         b.Text = p[n].ToString();
                         b.Index = ind[n];
+                        b.Enabled = false;
                         b.Click += Button_Click;
                         b.Margin = new Padding(10);
                         ProtocolProcess.Buttons.Add(b);
@@ -165,7 +204,7 @@ namespace Playhub
         private void bAnswer_Click(object sender, EventArgs e)
         {
             ProtocolProcess.RequestKnowAnswer();
-            if (ProtocolProcess.CanAnswer)
+            if (ProtocolProcess.CanAnswer && !BlockCanAnswer)
             {
                 EnterAnswer enter = new EnterAnswer();
                 if (enter.ShowDialog() == DialogResult.OK)
@@ -175,5 +214,25 @@ namespace Playhub
                 } 
             }
         }
+
+        private void Form2_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing || e.CloseReason == CloseReason.ApplicationExitCall)
+            {
+                foreach (var btn in ProtocolProcess.Buttons)
+                {
+                    btn.Invoke((MethodInvoker)(() => btn.Enabled = ProtocolProcess.CanChoose));
+                }
+            }
+        }
+
+        private void Form2_Activated(object sender, EventArgs e)
+        {
+            foreach (var btn in ProtocolProcess.Buttons)
+            {
+                btn.Invoke((MethodInvoker)(() => btn.Enabled = ProtocolProcess.CanChoose));
+            }
+        }
     }
+    
 }

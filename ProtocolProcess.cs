@@ -16,7 +16,11 @@ namespace Playhub
         public static ObservableCollection<ProtocolModel.Question> Questions { get; set; }
         public static ObservableCollection<ProtocolModel.Btn> Buttons { get; set; }
         public static bool CanAnswer { get; set; }
+        public static bool CanChoose { get; set; }
+        
         public static event EventHandler OnShowAnswer;
+        public static event EventHandler OnCanChoose;
+        public static event EventHandler OnTimerState;
         public static event EventHandler<AnswerReceivedEvent> OnHostCheckAnswer;
         public static event EventHandler<GameSettingsReceivedEvent> OnGameSettingsReceivedEvent;
         static ProtocolProcess()
@@ -65,18 +69,49 @@ namespace Playhub
                         OnShowAnswer?.Invoke(null, EventArgs.Empty);
                         break;
                     }
+                    case ProtocolModel.MessageType.CanChoose:
+                    {
+                        bool b;
+                        if (baseMessage.Data.ToString() == "True")
+                        {
+                             b = true;
+                        }
+                        else
+                        {
+                             b = false;
+                        }
+
+                        CanChoose = b;
+                        OnCanChoose?.Invoke(b,null);
+                        break;
+                    }
                     case ProtocolModel.MessageType.CanAnswer:
                     { 
                         if (baseMessage.Data.ToString() == "True")
                         {
-                             CanAnswer = true;
+                            CanAnswer = true;
                         }
                         else
                         {
-                             CanAnswer = false;
+                            CanAnswer = false;
                         }
                         break;
                     }
+                    case ProtocolModel.MessageType.SendTimerState:
+                    {
+                        bool b;
+                        if (baseMessage.Data.ToString() == "True")
+                        {
+                            b = true;
+                        }
+                        else
+                        {
+                            b = false;
+                        }
+                        OnTimerState?.Invoke(b, null);
+                        break;
+                    }
+                    
                     case ProtocolModel.MessageType.RequestGameSettings:
                     {
                         OnGameSettingsReceivedEvent?.Invoke(null, new GameSettingsReceivedEvent(baseMessage.Data.ToString()));
@@ -108,10 +143,10 @@ namespace Playhub
             GameServer.LoadQuestions();
             GameServer.SetTimer();
         }
-        public static void SetSettings( int winPoint, int numOfPl)
+        public static void SetSettings( bool host, int numOfPl)
         {
-            GameServer.GameWinPoint = winPoint;
             GameServer.NumOfPlayers = numOfPl;
+            GameServer.Host = host;
         }
         public static void CreatePlayer(string gameAdrress, int gamePort)
         {
