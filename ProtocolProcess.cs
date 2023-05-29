@@ -42,7 +42,6 @@ namespace Playhub
                 ProtocolModel.Base baseMessage = JsonConvert.DeserializeObject<ProtocolModel.Base>(messageToken);
                 switch (baseMessage.Type)
                 {
-                    // Get PlayerList
                     case ProtocolModel.MessageType.ResponsePlayers:
                         {
                             Players.Clear();
@@ -134,13 +133,13 @@ namespace Playhub
             }
 
         }
-        public static void CreateGame(string gameAdrress, int gamePort, string gameName)
+        public static void CreateGame(string gameAdrress, int gamePort, string gameName, string pathPack)
         {
             GameServer.GameAdrress = gameAdrress;
             GameServer.GamePort = gamePort;
             GameServer.GameName = gameName;
             GameServer.CreateSocket();
-            GameServer.LoadQuestions();
+            GameServer.LoadQuestions(pathPack);
             GameServer.SetTimer();
         }
         public static void SetSettings( bool host, int numOfPl)
@@ -197,6 +196,11 @@ namespace Playhub
         public static void StartGame()
         {
             GameServer.RequestStartGame();
+        }
+        
+        public static void StartTimer()
+        {
+            GameServer.StartTimer();
         }
     }
 }

@@ -1,5 +1,4 @@
 C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Playhub.exe.config
-C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Playhub.exe
 C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Playhub.pdb
 C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Newtonsoft.Json.dll
 C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\Newtonsoft.Json.xml
@@ -17,3 +16,4 @@ C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.EnterAnswer.resou
 C:\Users\Asus\Desktop\playhub-master\Playhub\obj\Debug\Playhub.CheckAnswer.resources
 C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\ProgressBar.dll
 C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\ProgressBar.xml
+C:\Users\Asus\Desktop\playhub-master\Playhub\bin\Debug\System.IO.Compression.ZipFile.dll

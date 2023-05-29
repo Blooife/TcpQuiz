@@ -14,14 +14,6 @@ namespace Playhub
             timer.Elapsed += TimerElapsed;
             timer.AutoReset = true;
         }
-        public void StartTimer()
-        {
-            timer.Start();
-            Thread.Sleep(7000);
-            timer.Stop();
-            timer.Dispose();
-           // Form1.GamePanel.prBar.Visible = false;
-        }
 
         public void Start()
         {

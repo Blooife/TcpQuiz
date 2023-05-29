@@ -25,11 +25,19 @@ namespace Playhub
         {
             public int Index { get; set; }
             public string Text { get; set; }
-            public int Type { get; set; }
+            public QuestionType Type { get; set; }
             public  int Points { get; set; }
             public string Answer { get; set; }
             public string Subject { get; set; }
+            public byte[] Picture { get; set; }
             
+        }
+
+        public enum QuestionType
+        {
+            Text,
+            Picture,
+            TP,
         }
 
         public class Answer
@@ -88,6 +96,7 @@ namespace Playhub
             SendHostCheckAnswer,
             ResponseHostCheck,
             RequestGameSettings,
+            StartTimer,
         }
     }
 }

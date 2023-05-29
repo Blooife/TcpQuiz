@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mime;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -152,19 +153,12 @@ namespace Playhub
                                         BroadcastFromServer(json);
                                         break;
                                     }
-                                    case ProtocolModel.MessageType.NewQuestion:
-                                    {
-                                        SendCanAnswer(true);
-                                        BroadcastFromServer(json);
-                                        break;
-                                    }
-                                    // Start Game
                                     case ProtocolModel.MessageType.RequestStart:
                                     {
                                         GameRunning = true;
                                         RequestSendMessage($"--> Game started by host");
                                         SendCanChooseFalse();
-                                        if (Host)
+                                        if(Host)
                                         {
                                             SendCanChooseTrue(Clients[1]);
                                         }
@@ -188,13 +182,13 @@ namespace Playhub
                                                     Type = ProtocolModel.MessageType.CanAnswer,
                                                     Data = "True"
                                                 }), connectionClient);
+                                                RequestSendMessage($"{Players.First(p=>p.Id==connectionClient.Id).Name} is answering");
                                                 SendTimerState(false);
                                                 GameTimer.Stop();
                                                 watch.Stop();
                                             }
-                                            ReceiveAnswer = false; 
-                                        
-                                        break;
+                                            ReceiveAnswer = false;
+                                            break;
                                     }
                                     case ProtocolModel.MessageType.SendAnswer:
                                     {
@@ -224,7 +218,14 @@ namespace Playhub
                                         var m = JsonConvert.DeserializeObject<ProtocolModel.Answer>(
                                             baseMessage.Data.ToString());
                                         CheckAnswer(m);
-                                        
+                                        break;
+                                    }
+                                    case ProtocolModel.MessageType.StartTimer:
+                                    {
+                                        GameTimer.Interval = 7000;
+                                        watch.Reset();
+                                        GameTimer.Start();
+                                        watch.Start();
                                         break;
                                     }
                                     case ProtocolModel.MessageType.ShowQuestion:
@@ -232,9 +233,9 @@ namespace Playhub
                                         int m = Int16.Parse(JsonConvert.DeserializeObject<string>(
                                             baseMessage.Data.ToString()));
                                         RequestNewQuestion(m);
-                                        watch.Reset();
+                                        /*watch.Reset();
                                         GameTimer.Start();
-                                        watch.Start();
+                                        watch.Start();*/
                                         BroadcastFromServer(JsonConvert.SerializeObject(new ProtocolModel.Base
                                         {
                                             Type = ProtocolModel.MessageType.RemoveButton,
@@ -274,6 +275,17 @@ namespace Playhub
                 BroadcastPlayers();
             }
 
+        }
+
+        public static void StartTimer()
+        {
+            string json = JsonConvert.SerializeObject(new ProtocolModel.Base
+            {
+                Type = ProtocolModel.MessageType.StartTimer,
+                DateTime = DateTime.Now,
+                Data = "",
+            });
+            SendFromClient(json);
         }
 
         public static void SendTimerState(bool st)
@@ -324,8 +336,8 @@ namespace Playhub
                 else
                 {
                     GameTimer.Stop();
-                    GameTimer.Interval = 7000;
                     watch.Stop();
+                    GameTimer.Interval = 7000;
                     SendTimerState(false);
                     SendCanAnswer(false);
                     ShowAnswer();
@@ -349,7 +361,7 @@ namespace Playhub
             }
             else
             {
-                if (answer.answer == CurrentQuestion.Answer)
+                if (answer.answer.ToLower() == CurrentQuestion.Answer.ToLower())
                 {
                     pl.Point += CurrentQuestion.Points;
                     RequestSendMessage(
@@ -383,7 +395,6 @@ namespace Playhub
                             {
                                 json = Encoding.UTF8.GetString(data, 0, bytes);
                             }
-
                             OnDataReceived?.Invoke(null, new DataReceivedEvent(json));
                         }
 
@@ -460,9 +471,8 @@ namespace Playhub
                         }
                         catch
                         {
-
+                            
                         }
-
                     }
                     else
                     {
@@ -525,8 +535,7 @@ namespace Playhub
             Players = new ObservableCollection<ProtocolModel.Player>(Players.OrderByDescending(i => i.Point));
             RequestSendMessage($"{Players.First().Name} ({Players.First().Point}) is Won");
             RequestSendMessage($"Game Finished"); 
-            GameRunning = false; 
-            
+            GameRunning = false;
         }
 
         //Request
@@ -569,12 +578,15 @@ namespace Playhub
                     Data = new ProtocolModel.Question()
                     {
                         Text = CurrentQuestion.Text,
+                        Picture = CurrentQuestion.Picture,
+                        Subject = CurrentQuestion.Subject,
                         Answer = CurrentQuestion.Answer,
                         Points = CurrentQuestion.Points,
-                        Type = CurrentQuestion.Type
+                        Type = CurrentQuestion.Type,
                     }
                 });
-                SendFromClient(json);
+                SendCanAnswer(true);
+                BroadcastFromServer(json);
             }
         }
 
@@ -604,10 +616,10 @@ namespace Playhub
             SendFromClient(json);
         }
 
-        public static void LoadQuestions() ///будет передаваться файл
+        public static void LoadQuestions(string pathPack) 
         {
             List<ProtocolModel.Question> list = new List<ProtocolModel.Question>();
-            string filePath = "C:/Users/Asus/Desktop/playhub-master/Playhub/quizes/1.txt";
+            string filePath = pathPack + @"\allQ.txt";
             try
             {
                 using (StreamReader reader = new StreamReader(filePath))
@@ -620,7 +632,31 @@ namespace Playhub
                         {
                             ProtocolModel.Question qu = new ProtocolModel.Question();
                             qu.Subject = line;
-                            qu.Text = reader.ReadLine();
+                            string t = reader.ReadLine();
+                            switch (t)
+                            {
+                                case "Text":
+                                {
+                                    qu.Type = ProtocolModel.QuestionType.Text;
+                                    qu.Text = reader.ReadLine();
+                                    break;
+                                }
+                                case "Picture":
+                                {
+                                    qu.Type = ProtocolModel.QuestionType.Picture;
+                                    string imgPath = reader.ReadLine();
+                                    qu.Picture = File.ReadAllBytes(pathPack + @"\" + imgPath);
+                                    break;
+                                }
+                                case "TP":
+                                {
+                                    qu.Type = ProtocolModel.QuestionType.TP;
+                                    qu.Text = reader.ReadLine();
+                                    string imgPath = reader.ReadLine();
+                                    qu.Picture = File.ReadAllBytes(pathPack + @"\" + imgPath);
+                                    break;
+                                }
+                            }
                             qu.Answer = reader.ReadLine();
                             qu.Points = int.Parse(reader.ReadLine());
                             list.Add(qu);
@@ -693,16 +729,20 @@ namespace Playhub
             SendFromClient(json); 
             
         }
-
         public static void ShowAnswer()
         {
-            var json = JsonConvert.SerializeObject(new ProtocolModel.Base
-            {
-                DateTime = DateTime.Now,
-                Type = ProtocolModel.MessageType.ShowAnswer,
-                Data = ""
-            });
-            BroadcastFromServer(json);
+                var json = JsonConvert.SerializeObject(new ProtocolModel.Base
+                {
+                    DateTime = DateTime.Now,
+                    Type = ProtocolModel.MessageType.ShowAnswer,
+                    Data = ""
+                });
+                BroadcastFromServer(json);
+                if (Questions.Count <= 0)
+                {
+                    GameRunning = false;
+                    BroadcastWinner();
+                }
         }
         
         public static void SetTimer()
@@ -715,9 +755,9 @@ namespace Playhub
 
         private static void OnTimedEvent(Object source, ElapsedEventArgs e)
         {
-            GameTimer.Interval = 7000;
             SendCanAnswer(false);
             ShowAnswer();
+            GameTimer.Stop();
         }
     }
 }

@@ -40,6 +40,7 @@ namespace Playhub
             // bYes
             // 
             this.bYes.DialogResult = System.Windows.Forms.DialogResult.Yes;
+            this.bYes.Font = new System.Drawing.Font("Engravers MT", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bYes.Location = new System.Drawing.Point(158, 175);
             this.bYes.Name = "bYes";
             this.bYes.Size = new System.Drawing.Size(75, 23);
@@ -50,6 +51,7 @@ namespace Playhub
             // bNo
             // 
             this.bNo.DialogResult = System.Windows.Forms.DialogResult.No;
+            this.bNo.Font = new System.Drawing.Font("Engravers MT", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bNo.Location = new System.Drawing.Point(62, 175);
             this.bNo.Name = "bNo";
             this.bNo.Size = new System.Drawing.Size(75, 23);
@@ -66,10 +68,11 @@ namespace Playhub
             // 
             // tText
             // 
-            this.tText.Location = new System.Drawing.Point(37, 29);
+            this.tText.Font = new System.Drawing.Font("Engravers MT", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tText.Location = new System.Drawing.Point(21, 23);
             this.tText.Name = "tText";
             this.tText.ReadOnly = true;
-            this.tText.Size = new System.Drawing.Size(222, 96);
+            this.tText.Size = new System.Drawing.Size(250, 126);
             this.tText.TabIndex = 3;
             this.tText.Text = "";
             // 

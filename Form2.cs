@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -11,7 +14,6 @@ namespace Playhub
     {
         public TableLayoutPanel panel = new TableLayoutPanel();
         public static TimerThreadExample example = new TimerThreadExample();
-        Thread timerThread = new Thread(new ThreadStart(example.Start));
         public bool BlockCanAnswer = false;
 
         public Form2()
@@ -25,13 +27,15 @@ namespace Playhub
             ProtocolProcess.OnCanChoose += CanChoose;
             ProtocolProcess.OnTimerState += ProcessTimerState;
             ProtocolProcess.OnHostCheckAnswer += CheckAnswer;
+            panel.AutoScroll = true;
             prBar.Maximum = 6000;
             prBar.Minimum = 0; 
             prBar.Value = 0;
-            
+            panel.Font = new Font("Engravers MT", 10, FontStyle.Regular);
             if (PlayerSetting.IsHost)
             {
                 bStart.Visible = true;
+                bEdPoints.Visible = !PlayerSetting.IsPlayer;
                 bAnswer.Visible = PlayerSetting.IsPlayer;
             }
         }
@@ -86,26 +90,85 @@ namespace Playhub
             BlockCanAnswer = true;
             prBar.Invoke((MethodInvoker)(()=> prBar.Visible = false));
             var q = ProtocolProcess.Questions.Last();
-            tQuestion.Invoke((MethodInvoker)(() => tQuestion.Text = $"{q.Answer}" + Environment.NewLine));
+            tQuestion.Invoke((MethodInvoker)(() =>
+            {
+                tQuestion.Visible = true;
+                pBox.Visible = false;
+                tQuestion.Text = $"{q.Answer}" + Environment.NewLine;
+            }));
             Thread.Sleep(3000);
-            tQuestion.Invoke((MethodInvoker)(() => tQuestion.Visible = false));
+            tQuestion.Invoke((MethodInvoker)(() =>
+            {
+                tQuestion.Visible = false;
+            }));
             BlockCanAnswer = false;
         }
 
         
         private void QuestionsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-             Task.Run(() => {tQuestion.Invoke((MethodInvoker)(() => tQuestion.Visible = true));
+            Task.Run(() => {
                 var q = (ProtocolModel.Question)e.NewItems[0];
-                tQuestion.Invoke((MethodInvoker)(() => tQuestion.Text = $"{q.Text}" + Environment.NewLine)); });
-             
-             Task.Run(() =>
-             {
-                 prBar.Invoke((MethodInvoker)(() => prBar.Value = 0));
-                 prBar.Invoke((MethodInvoker)(() => prBar.Visible = true));
-             });
-             example.timer.Start();
+                if (q.Type == ProtocolModel.QuestionType.Text)
+                {
+                    tQuestion.Invoke((MethodInvoker)(() =>
+                    {
+                        tQuestion.Visible = true;
+                        tQuestion.Text = $"{q.Text}" + Environment.NewLine;
+                    })); 
+                    ProtocolProcess.StartTimer();
+                    StartProgressBar();
+                }
+                else if(q.Type == ProtocolModel.QuestionType.Picture)
+                {
+                    using (MemoryStream memoryStream = new MemoryStream())
+                    {
+                        memoryStream.Write(q.Picture, 0, q.Picture.Length);
+                        Image image = Image.FromStream(memoryStream);
+                        pBox.Invoke((MethodInvoker)(()=>
+                        {
+                            pBox.Visible = true;
+                            pBox.Image = image;
+                        }));
+                    }
+                    ProtocolProcess.StartTimer();
+                    StartProgressBar();
+                }else if (q.Type == ProtocolModel.QuestionType.TP)
+                {
+                    BlockCanAnswer = true;
+                    tQuestion.Invoke((MethodInvoker)(() =>
+                    {
+                        tQuestion.Visible = true;
+                        tQuestion.Text = $"{q.Text}" + Environment.NewLine;
+                    })); 
+                    Thread.Sleep(3000);
+                    BlockCanAnswer = false;
+                    ProtocolProcess.StartTimer();
+                    using (MemoryStream memoryStream = new MemoryStream())
+                    {
+                        memoryStream.Write(q.Picture, 0, q.Picture.Length);
+                        Image image = Image.FromStream(memoryStream);
+                        pBox.Invoke((MethodInvoker)(()=>
+                        {
+                            pBox.Visible = true;
+                            pBox.Image = image;
+                        }));
+                    }
+                    StartProgressBar();
+                }
+                
+            });
+            
+        }
 
+        public void StartProgressBar()
+        {
+            Task.Run(() =>
+            {
+                prBar.Invoke((MethodInvoker)(() => prBar.Value = 0));
+                prBar.Invoke((MethodInvoker)(() => prBar.Visible = true));
+            });
+            example.timer.Start();
         }
         private void MessagesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -128,6 +191,7 @@ namespace Playhub
         {
             prBar.Visible = false;
             label9.Text = PlayerSetting.Username;
+            
             ProtocolProcess.RequestGameSettings();
             int[] p;
             int[] ind;
@@ -147,6 +211,7 @@ namespace Playhub
                         b.Click += Button_Click;
                         b.Margin = new Padding(10);
                         ProtocolProcess.Buttons.Add(b);
+                        b.Font = new Font("Engravers MT", 10, FontStyle.Regular);
                     }
                     var subjects = ev.GameSettings.Subjects;
                     var counts = subjects.GroupBy(x => x)
@@ -161,7 +226,11 @@ namespace Playhub
                     int bCount = 0;
                     foreach (var el in counts)
                     {
-                        this.Invoke((MethodInvoker)(() => panel.Controls.Add(new Label(){Text = el.Value}, i,j)));
+                        this.Invoke((MethodInvoker)(() => panel.Controls.Add(new Label()
+                        {
+                            Text = el.Value,
+                            Margin = new Padding(10),
+                        }, i,j)));
                         i++;
                         for (int k = 0; k < el.Count; k++)
                         {
@@ -232,6 +301,26 @@ namespace Playhub
             {
                 btn.Invoke((MethodInvoker)(() => btn.Enabled = ProtocolProcess.CanChoose));
             }
+        }
+
+        private void bEdPoints_Click(object sender, EventArgs e)
+        {
+            pEditPoints.Visible = true;
+            foreach (var pl in ProtocolProcess.Players)
+            {
+                cbPlayers.Items.Add(pl.Name);
+            }
+            
+        }
+
+        private void bCancel_Click(object sender, EventArgs e)
+        {
+            pEditPoints.Visible = false;
+        }
+
+        private void bOk_Click(object sender, EventArgs e)
+        {
+            pEditPoints.Visible = false;
         }
     }
     
